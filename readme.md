@@ -1,119 +1,175 @@
-# Advanced Multidimensional Student Performance Analytics
 
-### *Predictive Modeling, Burnout Risk Stratification, and Behavioral Clustering*
+# Multidimensional Student Performance Analytics
 
-## Project Overview
-
-This project engineering a comprehensive analytical framework to evaluate and predict student academic trajectories. By leveraging a dataset of **550+ students**, the system moves beyond simple grade tracking to analyze the symbiotic relationship between physiological factors (sleep, health), psychological indicators (stress, motivation), and academic outcomes.
-
-The architecture features a dual-engine approach: a **High-Precision Regressor** for performance forecasting and a **Robust Classifier** for proactive burnout detection.
+## A Predictive Framework for Burnout Risk & Academic Trajectories
 
 ---
 
-## Technical Architecture & Methodology
+## Executive Summary
 
-### 1. Advanced Data Engineering Pipeline
+This repository presents a dual-engine machine learning framework designed to model academic performance trajectories while simultaneously detecting burnout risk in higher-education students.
 
-* 
-**KNN-Based Imputation**: Implemented `KNNImputer` (n=5) for sophisticated missing value recovery, ensuring the integrity of the 'Age' feature space compared to simple mean/median methods.
+The system integrates:
 
+* **Predictive Performance Engine** for continuous regression modeling of a synthesized performance index
+* **Risk Stratification Engine** for multi-class classification of burnout risk and early intervention
 
-* 
-**Feature Synthesis & Normalization**: Engineered a composite `Performance_Score` by aggregating multi-source signals (Marks, Attendance, Sleep, Health, and Motivation) through `MinMaxScaler` and `StandardScaler` transformations .
+The models are trained on a multi-factor behavioural dataset of more than 550 students, combining academic, behavioural, and psychological attributes.
 
+This work unifies predictive analytics, explainable AI, and unsupervised learning to deliver actionable and interpretable educational intelligence.
 
-* 
-**Stochastic Continuous Mapping**: Added Gaussian noise to discrete health and motivation scores to enhance model generalization and prevent overfitting on sparse distributions .
+# System Overview
 
-
-
-### 2. High-Dimensional Visualization & EDA
-
-* 
-**Manifold Learning**: Utilized **t-SNE (t-distributed Stochastic Neighbor Embedding)** to project high-dimensional student data into 2D space, revealing distinct clusters and "fuzzy" boundaries between performance labels .
-
-
-* 
-**Feature Interconnectivity**: Executed a detailed Pearson Correlation analysis, identifying a strong negative correlation between **Stress Score** and **Performance Score**.
-
-
-
----
-
-## Performance Metrics & Model Benchmarking
-
-The project utilizes a multi-model ensemble to ensure predictive reliability.
-
-### Performance Prediction (Regression)
-
-We benchmarked several architectures, with **Random Forest** emerging as the superior model due to its ability to capture non-linear student behaviors.
-
-| Model | RMSE (Lower is Better) |  Score | Key Parameters |
-| --- | --- | --- | --- |
-| **Random Forest (Optimized)** | <br>**0.1029** 
-
- | <br>**0.8101** 
-
- | <br>`max_depth: 10`, `n_estimators: 200` 
-
- |
-| **Support Vector Regressor** | 0.3175 
-
- | 0.8408 
-
- | <br>`kernel: rbf`, `C: 100` 
-
- |
-| **Linear Regression** | 0.3246 
-
- | 0.8336 
-
- | Baseline |
-
-### Burnout Risk Detection (Classification)
-
-To address class imbalance in student burnout, we integrated **SMOTE (Synthetic Minority Over-sampling Technique)**.
-
-* 
-**Accuracy**: **85.11%** 
-
-
-* 
-**Macro F1-Score**: **0.81** (SVC implementation) 
-
-
-* 
-**Feature Importance**: `Motivation` and `Late_submissions` were identified via **SHAP (SHapley Additive exPlanations)** as the primary drivers of burnout risk.
-
-
+```
+Raw Survey Data
+      ↓
+Data Engineering and Feature Synthesis
+      ↓
+Regression Engine → Performance Score
+Classification Engine → Burnout Risk
+      ↓
+Interpretability + Clustering + Visualization
+      ↓
+Actionable Student Archetypes and Feedback
+```
 
 ---
 
-## Unsupervised Behavioral Clustering
+# Data Engineering Deep Dive
 
-Using **K-Means Clustering** coupled with **Principal Component Analysis (PCA)**, students were segmented into three distinct behavioral archetypes:
+The dataset integrates behavioural, academic, and psychometric signals.
 
-1. 
-**Motivated but Stressed**: High engagement but rising burnout signals.
+| Category      | Features                                   |
+| ------------- | ------------------------------------------ |
+| Academic      | Marks, Study Hours, Attendance             |
+| Behavioural   | Consistency, Late Submissions              |
+| Psychological | Stress, Motivation, Sleep, Physical Health |
 
+## Missing Value Recovery — KNN Imputation (n = 5)
 
-2. 
-**Low Motivation, High Risk**: Critical intervention required.
+A KNNImputer with five neighbors was used to reconstruct missing values while preserving feature relationships. This approach avoids the bias introduced by mean or median imputation and maintains the local structure of the feature space.
 
+## Stochastic Continuous Mapping (Gaussian Noise Injection)
 
-3. 
-**Balanced and Stable**: Optimal performance-wellbeing equilibrium.
+Several survey variables were discretized into ordinal levels. To improve generalization, Gaussian noise was injected into engineered features:
 
+x_prime = clip(x + Normal(0, 0.05), 0, 1)
 
+This stochastic mapping transforms ordinal bins into quasi-continuous variables, improving model generalization and reducing discretization artifacts.
+
+## Feature Synthesis — Performance Score
+
+A composite academic wellness index was engineered:
+
+Performance_Score = Sleep_Hours + Physical_Health + Study_Hours + Motivation + Attendance - Stress
+
+The score lies within the range [0, 5] and captures both positive and negative contributors to academic outcomes.
 
 ---
 
-## 💻 Tech Stack
+# Model Architecture and Benchmarking
 
-* **Core**: Python, Pandas, NumPy
-* **ML Frameworks**: Scikit-Learn, Imbalanced-learn (SMOTE)
-* **Explainable AI (XAI)**: SHAP
-* **Visualization**: Seaborn, Matplotlib, Plotly (Radar/Spider Charts)
-* **Deployment**: Joblib (Model Serialization)
+## Regression Engine — Performance Prediction
+
+| Model                    | RMSE       | R²         |
+| ------------------------ | ---------- | ---------- |
+| Linear Regression (Best) | **0.2646** | **0.8707** |
+| Random Forest Regressor  | 0.3385     | 0.7885     |
+| Support Vector Regressor | 0.2908     | 0.8664     |
+| Decision Tree Regressor  | 0.4412     | 0.6407     |
+
+The results indicate strong linear structure in the feature space, allowing a parametric model to outperform ensemble methods.
+
+## Classification Engine — Burnout Risk Detection
+
+Pipeline:
+
+* Stratified train/test split
+* SMOTE resampling to correct class imbalance
+* Hyperparameter-tuned Random Forest classifier
+
+| Metric             | Value    |
+| ------------------ | -------- |
+| Accuracy           | 0.85     |
+| Weighted F1 Score  | **0.86** |
+| Recall (High Risk) | 0.75     |
+
+The classifier reliably identifies vulnerable students and minimizes false negatives in high-risk populations.
 
 ---
+
+# Interpretability and Visualization
+
+## t-SNE Manifold Learning
+
+High-dimensional student behaviour was projected into two dimensions using t-SNE, revealing distinct behavioural regions and fuzzy class boundaries.
+
+## SHAP Explainability
+
+SHAP analysis provided model transparency and feature attribution.
+
+Key predictors of performance:
+
+* Sleep Hours
+* Physical Health
+* Attendance
+* Motivation
+
+Key predictors of burnout:
+
+* Motivation
+* Sleep Hours
+* Teacher Support
+
+## Unsupervised Student Archetypes
+
+K-Means clustering revealed three latent student profiles:
+
+| Cluster   | Archetype                 | Description                            |
+| --------- | ------------------------- | -------------------------------------- |
+| Cluster 0 | Motivated but Stressed    | High effort with elevated burnout risk |
+| Cluster 1 | Low Motivation, High Risk | Critical intervention group            |
+| Cluster 2 | Balanced and Stable       | Healthy academic behaviour             |
+
+---
+
+# Visual Analytics
+
+The system includes:
+
+* Correlation heatmaps
+* Confusion matrices
+* SHAP summary plots
+* t-SNE embeddings
+* Radar profile comparisons
+
+These visual tools transform predictions into human-interpretable insights.
+
+---
+
+# Technology Stack
+
+| Category           | Tools                    |
+| ------------------ | ------------------------ |
+| Language           | Python                   |
+| Machine Learning   | Scikit-Learn             |
+| Imbalance Handling | Imbalanced-Learn (SMOTE) |
+| Explainability     | SHAP                     |
+| Visualization      | Matplotlib, Seaborn      |
+| Manifold Learning  | t-SNE                    |
+| Clustering         | K-Means, PCA             |
+
+---
+
+# Future Directions
+
+* Integration with LLM-based academic coaching systems
+* Real-time burnout monitoring dashboards
+* Cross-institution validation and scaling
+* Adaptive recommendation engines
+
+---
+
+# Research Impact
+
+This project demonstrates how interpretable machine learning can evolve from prediction into proactive academic intervention, forming a foundation for AI-driven student success platforms.
